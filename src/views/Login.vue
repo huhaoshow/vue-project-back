@@ -2,7 +2,7 @@
   <div class="login">
     <div class="container">
       <img src="../assets/default.jpg" alt="" class="avatar">
-      <el-form :model="userData" :rules="rules" ref="ruleForm" class="demo-ruleForm">
+      <el-form :model="userData" :rules="confirmUser" ref="userData">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="userData.username" placeholder="请输入用户名" clearable prefix-icon="icon-user-check."></el-input>
         </el-form-item>
@@ -10,7 +10,7 @@
           <el-input v-model="userData.password" placeholder="请输入6~16位的密码" clearable prefix-icon="icon-key"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" class="login-btn">登录</el-button>
+          <el-button type="primary" class="login-btn" @click="login">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -18,15 +18,16 @@
 </template>
 
 <script>
+import { userLogin } from '@/api/user.js'
 export default {
   // 数据函数对象
   data () {
     return {
       userData: {
-        username: '',
-        password: ''
+        username: 'admin',
+        password: '1596321'
       },
-      rules: {
+      confirmUser: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' }
         ],
@@ -39,7 +40,32 @@ export default {
   },
   // 组件加载完成钩子函数
   mounted () {
-    console.log(this.userData)
+  },
+  // 事件处理函数对象
+  methods: {
+    login () {
+      // el-form有validate方法,参数是一个回调函数,回调函数的参数valid也是回调函数,若验证成功则返回true,失败返回false
+      this.$refs.userData.validate(async (valid) => {
+        if (valid) {
+          // 验证成功,发axios请求,若成功则跳转到主页并将token存入,否则给出提示
+          let res = await userLogin(this.userData)
+          if (res.data.message === '登录成功') {
+            this.$message.success(res.data.message)
+            let token = res.data.data.token
+            localStorage.setItem('back_token', token)
+            this.$router.push({ name: 'index' })
+          } else if (res.data.message === '用户名不存在') {
+            this.$message.error(res.data.message)
+          } else {
+            this.$message.error('请求失败')
+          }
+        } else {
+          // 若验证失败则给出提示并返回false终止操作
+          this.$message.error('你个憨憨,格式都错了!')
+          return false
+        }
+      })
+    }
   }
 }
 </script>
