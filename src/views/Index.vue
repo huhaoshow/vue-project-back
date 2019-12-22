@@ -4,8 +4,9 @@
       <el-aside width="200px">
         <div class="logo"></div>
         <el-menu
-          router= true
-          unique-opened
+          :router='true'
+          :unique-opened="true"
+          default-active="articleList"
           background-color="#545c64"
           text-color="#ccc"
           active-text-color="#ffd04b"
