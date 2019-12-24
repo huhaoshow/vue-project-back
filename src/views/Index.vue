@@ -66,18 +66,22 @@ export default {
   },
   // 钩子函数
   mounted () {
+    // 当刷新的时候,侧边栏当前的项目持续保持高亮
+    // 需要对submenu和sub-item的index进行改造,让其与路由匹配
     this.currentPage = this.$route.path.substring(this.$route.path.lastIndexOf('/') + 1)
   },
   // 监听对象
   watch: {
+    // 监听路由,当路由变化时,获取到跳转前后的路径,判断若跳转到welcome页面时,应该将所有项目的高亮取消并且收起导航栏
     '$route' (to, from) {
+      // 确定需要跳转到的项目
       let menuItem = to.path.substring(to.path.lastIndexOf('/') + 1)
+      // 确定跳转前的项目所在的导航栏,为之后的关闭导航栏做准备
       let submenu = from.path.substring(from.path.lastIndexOf('/') + 1, from.path.lastIndexOf('_'))
       if (menuItem === 'welcome') {
+        // 若跳转到welcome,则默认打开设置为空,取消所有高亮,并关闭所在导航栏
         this.currentPage = ''
         this.$refs.itemList.close(submenu)
-      } else {
-        this.currentPage = menuItem
       }
     }
   }
@@ -88,6 +92,9 @@ export default {
 <style lang='less' scoped>
 .index {
   height: 100%;
+  /deep/.el-submenu__title{
+    width: 200px;
+  }
   .el-menu-admin:not(.el-menu--collapse) {
     width: 200px;
     min-height: 400px;
@@ -96,6 +103,7 @@ export default {
     height: 100%;
   }
   .el-aside {
+    width: 199 px !important;
     background-color: #545c64;
   }
   .el-header {
@@ -127,6 +135,10 @@ export default {
   }
   .welcome {
     color: white;
+  }
+  /deep/.el-breadcrumb{
+    margin-bottom: 10px;
+    font-size: 16px;
   }
 }
 </style>

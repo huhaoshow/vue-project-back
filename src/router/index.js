@@ -7,6 +7,7 @@ import Login from '@/views/Login.vue'
 import Index from '@/views/Index.vue'
 import Welcome from '@/views/Welcome.vue'
 import ArticleList from '@/views/ArticleList.vue'
+import ArticlePublish from '@/views/ArticlePublish.vue'
 // 将vue-router挂载到vue中
 Vue.use(VueRouter)
 // 创建路由实例
@@ -44,6 +45,12 @@ let router = new VueRouter({
           name: 'articleList',
           path: 'article_list',
           component: ArticleList
+        },
+        // 文章发布页面
+        {
+          name: 'articlePublish',
+          path: 'article_publish',
+          component: ArticlePublish
         }
       ]
     }

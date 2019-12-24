@@ -1,7 +1,7 @@
 <template>
   <div class="articleList">
     <!-- 面包屑导航 -->
-    <el-breadcrumb separator-class="el-icon-arrow-right" style="margin-bottom:10px;font-size:16px">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/index' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>文章管理</el-breadcrumb-item>
       <el-breadcrumb-item>文章列表</el-breadcrumb-item>
