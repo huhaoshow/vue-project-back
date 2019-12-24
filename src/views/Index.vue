@@ -4,36 +4,37 @@
       <el-aside width="200px">
         <div class="logo"></div>
         <el-menu
+          ref='itemList'
           :router='true'
           :unique-opened="true"
-          default-active="articleList"
+          :default-active="currentPage"
           background-color="#545c64"
           text-color="#ccc"
           active-text-color="#ffd04b"
         >
-          <el-submenu index="1">
+          <el-submenu index="user">
             <template slot="title">
               <i class="el-icon-location"></i>
               <span>用户管理</span>
             </template>
-            <el-menu-item index="1-3">
+            <el-menu-item index="user_list">
               <span>用户列表</span>
             </el-menu-item>
           </el-submenu>
-          <el-submenu index="2">
+          <el-submenu index="article">
             <template slot="title">
               <i class="el-icon-location"></i>
               <span>文章管理</span>
             </template>
-            <el-menu-item index="articleList">文章列表</el-menu-item>
-            <el-menu-item index="2-2">文章发布</el-menu-item>
+            <el-menu-item index="article_list">文章列表</el-menu-item>
+            <el-menu-item index="article_publish">文章发布</el-menu-item>
           </el-submenu>
-          <el-submenu index="3">
+          <el-submenu index="category">
             <template slot="title">
               <i class="el-icon-location"></i>
               <span>栏目管理</span>
             </template>
-            <el-menu-item index="1-1">栏目列表</el-menu-item>
+            <el-menu-item index="category_list">栏目列表</el-menu-item>
           </el-submenu>
         </el-menu>
       </el-aside>
@@ -56,7 +57,32 @@
 </template>
 
 <script>
-export default {}
+export default {
+  // 数据函数对象
+  data () {
+    return {
+      currentPage: ''
+    }
+  },
+  // 钩子函数
+  mounted () {
+    this.currentPage = this.$route.path.substring(this.$route.path.lastIndexOf('/') + 1)
+  },
+  // 监听对象
+  watch: {
+    '$route' (to, from) {
+      let menuItem = to.path.substring(to.path.lastIndexOf('/') + 1)
+      let submenu = from.path.substring(from.path.lastIndexOf('/') + 1, from.path.lastIndexOf('_'))
+      if (menuItem === 'welcome') {
+        this.currentPage = ''
+        this.$refs.itemList.close(submenu)
+      } else {
+        this.currentPage = menuItem
+      }
+    }
+  }
+}
+
 </script>
 
 <style lang='less' scoped>

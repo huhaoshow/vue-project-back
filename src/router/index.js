@@ -42,7 +42,7 @@ let router = new VueRouter({
         // 文章列表页面
         {
           name: 'articleList',
-          path: 'articleList',
+          path: 'article_list',
           component: ArticleList
         }
       ]
