@@ -49,7 +49,7 @@
           >全选</el-checkbox>
           <div style="margin: 15px 0;"></div>
           <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
-            <el-checkbox v-for="city in cities" :label="city" :key="city">{{city}}</el-checkbox>
+            <el-checkbox v-for="category in cateList" :label="category.id" :key="category.id">{{category.name}}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
         <!-- 添加封面 -->
@@ -78,7 +78,21 @@
 // 引入富文本编辑器
 import VueEditor from 'vue-word-editor'
 import 'quill/dist/quill.snow.css'
+// 引入api方法
+import { getCategory } from '@/api/category.js'
 export default {
+  // 钩子函数
+  async mounted () {
+    // 当页面加载完成后向服务器请求栏目列表
+    let res = await getCategory()
+    if (res.status === 200) {
+      // 请求成功后,将返回的栏目列表去除关注和头条后存入到cateList中
+      this.cateList = res.data.data.slice(1)
+      console.log(this.cateList)
+    } else {
+      this.$message.error('请求失败')
+    }
+  },
   // 数据对象函数
   data () {
     return {
@@ -89,11 +103,11 @@ export default {
         cover: []
       },
       limitNum: 3,
+      cateList: [],
       fileList: [],
       isIndeterminate: '',
       checkAll: '',
       checkedCities: '',
-      cities: ['小海绵', '小糊涂', '大海绵', '大糊涂'],
       config: {
         // 上传图片的配置
         uploadImage: {
