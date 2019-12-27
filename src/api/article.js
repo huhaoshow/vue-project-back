@@ -11,3 +11,12 @@ export const getArticleList = (params) => {
     params
   })
 }
+
+// 发表文章
+export const postArticle = (data) => {
+  return axios({
+    method: 'post',
+    url: '/post',
+    data
+  })
+}

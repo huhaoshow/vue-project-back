@@ -82,6 +82,9 @@ export default {
         // 若跳转到welcome,则默认打开设置为空,取消所有高亮,并关闭所在导航栏
         this.currentPage = ''
         this.$refs.itemList.close(submenu)
+      } else {
+        // 跳转到的页面同时侧边导航栏对应显示高亮
+        this.currentPage = this.$route.path.substring(this.$route.path.lastIndexOf('/') + 1)
       }
     }
   }

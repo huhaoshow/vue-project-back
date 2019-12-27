@@ -42,14 +42,20 @@
         </el-upload>
         <!-- 添加复选框组 -->
         <el-form-item label="栏目:">
+          <!-- indeterminate:不确定,表示当前状态不是选中也不是不选中 -->
+          <!-- v-model:该栏目绑定的值,点击后会切换是否为选中状态,对应的值为true/false -->
+          <!-- 备选框,用于操作是否在全选状态中 -->
           <el-checkbox
             :indeterminate="isIndeterminate"
-            v-model="checkAll"
-            @change="handleCheckAllChange"
+            @change="handleCheckAll"
           >全选</el-checkbox>
           <div style="margin: 15px 0;"></div>
-          <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
-            <el-checkbox v-for="category in cateList" :label="category.id" :key="category.id">{{category.name}}</el-checkbox>
+          <!-- 在多选框组中国双向绑定一个数组类型变量后,可以实现多选 -->
+          <!-- v-model:多选框组中所有被选中的栏目集合,只有绑定的是数组才能实现多选的效果 -->
+          <el-checkbox-group v-model="checkedCate" @change="handleSingleChecked">
+          <!-- label:当状态被选中时的值,当被选中后,该栏目的label值绑定在checkedCate中 -->
+          <!-- checked:默认是否被选中状态,点击后不会更改 -->
+            <el-checkbox v-for="category in cateList" :key="category.id" :label="category.id">{{category.name}}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
         <!-- 添加封面 -->
@@ -80,6 +86,7 @@ import VueEditor from 'vue-word-editor'
 import 'quill/dist/quill.snow.css'
 // 引入api方法
 import { getCategory } from '@/api/category.js'
+import { postArticle } from '@/api/article.js'
 export default {
   // 钩子函数
   async mounted () {
@@ -88,7 +95,6 @@ export default {
     if (res.status === 200) {
       // 请求成功后,将返回的栏目列表去除关注和头条后存入到cateList中
       this.cateList = res.data.data.slice(1)
-      console.log(this.cateList)
     } else {
       this.$message.error('请求失败')
     }
@@ -98,16 +104,16 @@ export default {
     return {
       articleData: {
         title: '',
-        type: 1,
         content: '',
-        cover: []
+        categories: [],
+        cover: [],
+        type: 1
       },
       limitNum: 3,
       cateList: [],
       fileList: [],
-      isIndeterminate: '',
-      checkAll: '',
-      checkedCities: '',
+      isIndeterminate: false,
+      checkedCate: [],
       config: {
         // 上传图片的配置
         uploadImage: {
@@ -145,16 +151,6 @@ export default {
   },
   //   事件处理函数方法
   methods: {
-    // 发表文章
-    post () {
-      // editor富文本编辑器的文本内容储存在this.$refs.articleContent.editor.root.innerHTML中
-      // 当发表文章的时候将内容存储到articleData.content中,而发表视频时并不需要
-      if (this.articleData.type === 1) {
-        // type值为1时说明发表的是文章
-        this.articleData.content = this.$refs.articleContent.editor.root.innerHTML || ''
-        console.log(this.articleData)
-      }
-    },
     // 封装获取token令牌的操作
     getToken () {
       let token = localStorage.getItem('back_token')
@@ -180,7 +176,6 @@ export default {
     },
     // 添加封面成功前,判断上传的是否图片,且最多上传三张
     beforeAdd (file) {
-      console.log(file)
       if (file.type.indexOf('image') === -1) {
         // 若添加的不是图片则给出提示,并终止添加
         this.$message.warning('哇哦,你传的不是图片诶!')
@@ -192,11 +187,12 @@ export default {
       // 将id信息后添加到articleData中的cover数组内
       this.articleData.cover.push({ id: res.data.id })
     },
+    // 超出限制后
     overLimit (files, flieList) {
       this.$message.warning('请停下来,你已经传了很多了!')
     },
+    // 删除图片
     removeCover (file) {
-      console.log(file)
       // 点击删除后将articleData中的cover进行更新
       let id = file.response.data.id
       // 遍历cover数组,找到需要删除的数据将其删除然后终止循环
@@ -207,17 +203,51 @@ export default {
         }
       }
     },
-    handleCheckAllChange () {
-      console.log('未知')
+    // 点击全选后
+    handleCheckAll (val) {
+      // 点击全选按钮后,将不确定状态重置为false,若全选按钮为选中状态则将复选框中所有栏目选中,若为非选中状态,则取消所有栏目的选中
+      // 选中所有栏目 要想改变栏目的选中状态,要将与复选框组双向绑定的checkedCate数组中添加或删除该栏目的值
+      // 进行全选的时候需要进行数据改造
+      this.isIndeterminate = false
+      this.checkedCate = val ? this.cateList.map((item) => {
+        return item.id
+      }) : []
     },
-    handleCheckedCitiesChange () {
-      console.log('哈哈')
+    // 处理单个栏目状态改变后
+    handleSingleChecked (val) {
+      // val:变化后值,即变化后的checkedList
+      // 若checkedList的数组长度===cateList的数组长度,则表示全选状态
+      // 若checkedList的数组长度 === 0,则是全不选状态
+      // 若checkedList的数组长度 !== cateList的数组长度,则表示为不确定状态
+      this.checkedAll = val.length === this.cateList.length
+      this.isIndeterminate = val.length > 0 && !this.checkedAll
     },
-    handlePictureCardPreview () {
-      console.log('haha')
-    },
-    handleRemove () {
-      console.log('jasja')
+    // 发表文章
+    async post () {
+      // editor富文本编辑器的文本内容储存在this.$refs.articleContent.editor.root.innerHTML中
+      // 当发表文章的时候将内容存储到articleData.content中,而发表视频时并不需要
+      if (this.articleData.type === 1) {
+        // type值为1时说明发表的是文章
+        // 设置内容数据
+        this.articleData.content = this.$refs.articleContent.editor.root.innerHTML || ''
+      }
+      // 设置栏目数据
+      // 清空数组
+      this.articleData.categories.length = 0
+      // 将栏目以id集合的形式追加到categories数组中
+      // 遍历中用箭头函数内部的this指向是该vue组件
+      this.checkedCate.forEach((item) => {
+        this.articleData.categories.push({ id: item })
+      })
+      // 发布文章
+      let res = await postArticle(this.articleData)
+      if (res.data.message === '文章发布成功') {
+        // 文章发布成功后,给出提示并跳转到文章列表页面
+        this.$message.success('文章发表成功')
+        this.$router.push({ name: 'articleList' })
+      } else {
+        this.$message.error('文章发表失败')
+      }
     }
   },
   // 注册组件对象
